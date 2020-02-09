@@ -1,0 +1,24 @@
+SC_MODULE(Sensor)
+
+Takes input from generator, and from traffic_light.
+Tells traffic light if there are cars waiting.
+
+Decreases cars when traffic light is green.
+
+count_cars is triggered by input from generator
+decrease_cars is triggered by input from traffic light
+Pings traffic ligth every second if a car is waiting
+
+
+SC_MODULE(TrafficLight)
+
+Gets input once a second from sensor if car is waiting
+Gets input from central unit if the light is allowed to go green
+
+sends request to central unit if central unit says otherwise
+sends light to light unit
+sends instruction to sensor to decrament
+
+
+
+

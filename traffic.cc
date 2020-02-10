@@ -31,14 +31,15 @@ void Sensor::count_cars()
   car_count++;
 }
 
+
 void Sensor::if_car_wait()
 {
   for (;;)
   {
     if (car_count > 0)
       ping_traffic_p->write(!ping_traffic_p.read());
-
-    wait(250, SC_MS);
+    
+    wait(150, SC_MS);
   }
 }
 
@@ -51,7 +52,7 @@ TrafficLight::TrafficLight(sc_module_name name)
   light_p.initialize(0);
   sensor_dec_p.initialize(0);
 
-  iamgreen = false;
+  try_go_green = false;
   cars = false;
 
   SC_METHOD(check_cross);
@@ -64,65 +65,100 @@ TrafficLight::TrafficLight(sc_module_name name)
 void TrafficLight::check_cross()
 {
   if (!(light_w_p->read() || light_e_p->read()))
-    iamgreen = true;
+    try_go_green = true;
 }
 
 void TrafficLight::light_logic()
 {
   int timer = 120;
-  cars = sensor_p->read();
+  bool go_red_later = false;
+  bool go_green = false;
 
   for (;;)
   {
-    if (iamgreen)
+    cars = sensor_p->read();
+    
+    if (try_go_green)
     {
-      am_green_w_p->write(1);
-      am_green_e_p->write(1);
-      light_p->write(1);
-      sensor_dec_p->write(!sensor_dec_p->read());
-    }
 
-    // sensor_p flips every 250ms if a car is waiting
-    // After 300ms, if sensor_p has the same value
-    // Then traffic light knows no new car has arrived
-    wait(300, SC_MS);
-    if (cars == sensor_p->read() || timer < 1)
-    {
-      timer = 120;
-      iamgreen = false;
-      am_green_w_p->write(0);
-      am_green_e_p->write(0);
-      light_p->write(0);
-    }
+      go_green = !(light_w_p->read() + light_e_p->read());
 
-    // If green, we wait a full second, because that is
-    // how long I assume it takes for one car to move
-    if (iamgreen)
-    {
-      wait(700, SC_MS);
-      timer--;
+      if (go_green)
+      {
+        am_green_w_p->write(1);
+        am_green_e_p->write(1);
+        wait(10, SC_MS);
+
+        // This part here checks if multiple lights had a go at the same time.
+        go_green = !(light_w_p->read() + light_e_p->read());
+   
+        if (!go_green)
+        {
+          am_green_w_p->write(0);
+          am_green_e_p->write(0);
+          break;
+        }
+        light_p->write(1);
+        sensor_dec_p->write(!sensor_dec_p->read());
+      }
+      // Else, try again later
+    
+      // sensor_p flips every 250ms if a car is waiting
+      // After 300ms, if sensor_p has the same value
+      // Then traffic light knows no new car has arrived
+      wait(200, SC_MS);
+      //cout << sc_time_stamp() << " " << name()<< endl;
+      //cout << name() << "-cars: " << cars << endl;
+      //cout << name() << "-curr: " << sensor_p->read() << endl;
+      if (cars == sensor_p->read() || timer < 1)
+        go_red_later = true;
+
+      // If green, we wait a full second, because that is
+      // how long I assume it takes for one car to move
+      // in this lab.
+      if (go_green)
+      {
+        wait(800, SC_MS);
+        timer--;
+      }
+
+      if(go_red_later)
+      {
+        timer = 120;
+        try_go_green = false;
+        go_green = false;
+        am_green_w_p->write(0);
+        am_green_e_p->write(0);
+        light_p->write(0);
+      }
     }
+    else
+      wait(50, SC_MS);
   }
 }
 
 LightPut::LightPut(sc_module_name name)
   : sc_module(name)
 {
-  SC_METHOD(print_light);
-  dont_initialize();
-  sensitive << light_NS_p << light_EW_p << light_SN_p << light_WE_p;
+  SC_THREAD(print_light);
+  //dont_initialize();
+  //sensitive << light_NS_p << light_EW_p << light_SN_p << light_WE_p;
 }
 
 void LightPut::print_light()
 {
-  cout << "NS  EW  SN  WE" << endl;
+  for (;;)
+  {
+    wait(1, SC_SEC);
+    cout << "NS  EW  SN  WE " << sc_time_stamp() << endl;
   
-  light_NS_p->read() ? cout << "1   " : cout << "0   ";
-  light_EW_p->read() ? cout << "1   " : cout << "0   ";
-  light_SN_p->read() ? cout << "1   " : cout << "0   ";
-  light_WE_p->read() ? cout << "1   " : cout << "0   ";
+    light_NS_p->read() ? cout << "1   " : cout << "0   ";
+    light_EW_p->read() ? cout << "1   " : cout << "0   ";
+    light_SN_p->read() ? cout << "1   " : cout << "0   ";
+    light_WE_p->read() ? cout << "1   " : cout << "0   ";
 
-  cout << endl << endl;    
+    cout << endl << endl;   
+  } 
 }
 
 

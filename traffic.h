@@ -22,7 +22,7 @@ SC_MODULE(Sensor)
 
 SC_MODULE(TrafficLight)
 {
-    bool iamgreen;
+    bool try_go_green;
     bool cars;
     sc_in<bool> sensor_p;
     sc_in<bool> light_w_p;

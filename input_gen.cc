@@ -28,19 +28,12 @@ void Generator::generate_thread()
   bool car_file[4];
   
   // Print structure
-  //cout << "NS EW SN WE" << endl;
   for (;;) 
   {
     wait(1, SC_SEC);     // Generate new inputs every second.
     
     for (int i = 0; i < 4; i++)
-    {
       *in >> car_file[i];          // Read from the input file.
-      //cout << car_file[i] << "  ";
-    }
-    //cout << endl;
-
-    // End
 
     // Generate sequences
     if (car_file[0])
@@ -54,6 +47,5 @@ void Generator::generate_thread()
 
     if (car_file[3])
       send_car_WE->write(!send_car_WE.read());
-
   }
 }

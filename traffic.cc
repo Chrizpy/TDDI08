@@ -35,18 +35,11 @@ void Sensor::if_car_wait()
 {
   for (;;)
   {
-    //cout << name() << " Cars waiting at " << car_count << endl;
-     if (car_count > 0)
-    {
+    if (car_count > 0)
       ping_traffic_p->write(!ping_traffic_p.read());
-      //cout << sc_time_stamp() << " : " << name() << " cars: " << car_count << endl;
-      //cout << sc_time_stamp() << " " << name() << "Sends a ping to tlight" << endl;
-    }
-    //cout << name() << " Cars waiting at " << car_count << endl;
 
     wait(250, SC_MS);
   }
-
 }
 
 
@@ -57,6 +50,7 @@ TrafficLight::TrafficLight(sc_module_name name)
   am_green_w_p.initialize(0);
   light_p.initialize(0);
   sensor_dec_p.initialize(0);
+
   iamgreen = false;
   cars = false;
 
@@ -65,26 +59,19 @@ TrafficLight::TrafficLight(sc_module_name name)
   sensitive << sensor_p;
 
   SC_THREAD(light_logic);
-  
-
 }
 
 void TrafficLight::check_cross()
 {
   if (!(light_w_p->read() || light_e_p->read()))
-  {
     iamgreen = true;
-    //cout << sc_time_stamp() << " " << name() <<  " Iam green now" << endl;
-  }
 }
 
 void TrafficLight::light_logic()
 {
-  // If given grant
-  // Start timer for 120s
-  // If timer runs out or cars run out, terminate
   int timer = 120;
   cars = sensor_p->read();
+
   for (;;)
   {
     if (iamgreen)
@@ -93,10 +80,12 @@ void TrafficLight::light_logic()
       am_green_e_p->write(1);
       light_p->write(1);
       sensor_dec_p->write(!sensor_dec_p->read());
-      //cout << name() << " am green" << endl;
     }
+
+    // sensor_p flips every 250ms if a car is waiting
+    // After 300ms, if sensor_p has the same value
+    // Then traffic light knows no new car has arrived
     wait(300, SC_MS);
-    //cout << sc_time_stamp() << " " << name() << ": checks if sensor has same ping" << endl;
     if (cars == sensor_p->read() || timer < 1)
     {
       timer = 120;
@@ -104,9 +93,10 @@ void TrafficLight::light_logic()
       am_green_w_p->write(0);
       am_green_e_p->write(0);
       light_p->write(0);
-      //cout << "OUT OF CARS or OUT OF TIME" << endl;
-      //cout << name() << " am red" << endl;
     }
+
+    // If green, we wait a full second, because that is
+    // how long I assume it takes for one car to move
     if (iamgreen)
     {
       wait(700, SC_MS);
@@ -121,31 +111,18 @@ LightPut::LightPut(sc_module_name name)
   SC_METHOD(print_light);
   dont_initialize();
   sensitive << light_NS_p << light_EW_p << light_SN_p << light_WE_p;
-  
 }
 
 void LightPut::print_light()
 {
-    cout << sc_time_stamp() << " " << endl;
-    cout << "NS  EW  SN  WE" << endl;
-    if (light_NS_p->read())
-      cout << "1   ";
-    else
-      cout << "0   ";
-    if (light_EW_p->read())
-      cout << "1   ";
-    else
-      cout << "0   ";
-    if (light_SN_p->read())
-      cout << "1   ";
-    else
-      cout << "0   ";
-    if (light_WE_p->read())
-      cout << "1   ";
-    else
-      cout << "0   ";
-    
-    cout << endl << endl;   
+  cout << "NS  EW  SN  WE" << endl;
+  
+  light_NS_p->read() ? cout << "1   " : cout << "0   ";
+  light_EW_p->read() ? cout << "1   " : cout << "0   ";
+  light_SN_p->read() ? cout << "1   " : cout << "0   ";
+  light_WE_p->read() ? cout << "1   " : cout << "0   ";
+
+  cout << endl << endl;    
 }
 
 

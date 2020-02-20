@@ -17,7 +17,7 @@ LDFLAGS = -g
 
 CC = g++-4.8
 OPT = -O3
-CFLAGS = -Wno-deprecated
+CFLAGS = -Wno-deprecated -std=c++11
 EXE = $(PROGRAM)
 
 INCDIR= -I. -I.. -I$(SYSTEMC)/include

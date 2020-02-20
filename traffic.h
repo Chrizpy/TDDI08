@@ -16,7 +16,7 @@ SC_MODULE(Sensor)
 
     void count_cars();
     void decrease_cars();
-    void if_car_wait();
+    void ping_update();
 
 };
 
@@ -24,21 +24,42 @@ SC_MODULE(TrafficLight)
 {
     bool try_go_green;
     bool cars;
+    int timer;
+    bool go_green;
+    bool go_red_later;
     sc_in<bool> sensor_p;
-    sc_in<bool> light_w_p;
-    sc_in<bool> light_e_p;
 
-    sc_out<bool> am_green_w_p;
-    sc_out<bool> am_green_e_p;
     sc_out<bool> light_p;
     sc_out<bool> sensor_dec_p;
+    sc_out<bool> cent_unit_o_p;
+    sc_in<bool> cent_unit_i_p;
 
     SC_HAS_PROCESS(TrafficLight);
     TrafficLight(sc_module_name name);
 
-    void check_cross();
     void light_logic();
+};
 
+SC_MODULE(CentralUnit)
+{
+    std::random_device rd;
+    bool lights[4];
+    bool lights_active[4];
+
+    sc_in<bool> traffic_1i_p;
+    sc_in<bool> traffic_2i_p;
+    sc_in<bool> traffic_3i_p;
+    sc_in<bool> traffic_4i_p;
+
+    sc_out<bool> traffic_1o_p;
+    sc_out<bool> traffic_2o_p;
+    sc_out<bool> traffic_3o_p;
+    sc_out<bool> traffic_4o_p;
+
+    SC_HAS_PROCESS(CentralUnit);
+    CentralUnit(sc_module_name name);
+
+    void handle_lights();
 };
 
 SC_MODULE(LightPut)

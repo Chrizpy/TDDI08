@@ -7,6 +7,7 @@
 using std::ifstream;
 
 SC_MODULE(Generator) {
+  std::random_device rd;
   sc_out<bool> send_car_NS;
   sc_out<bool> send_car_EW;
   sc_out<bool> send_car_SN;

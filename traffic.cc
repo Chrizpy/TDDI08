@@ -23,13 +23,14 @@ Sensor::Sensor(sc_module_name name)
 void Sensor::decrease_cars()
 {
    car_count--;
-   cout << name() << " decreasing a car" << endl;
+   cout << name() << " decreasing a car" << " at timestamp: " << sc_time_stamp() << endl;
 }
 
 void Sensor::count_cars()
 {
-  cout << name() << " car arrived" << endl;
+  cout << name() << " car arrived" << " at timestamp: " << sc_time_stamp() << endl;
   car_count++;
+  cout << name() << " cars waiting: " << car_count << " at timestamp: " << sc_time_stamp() << endl;
 }
 
 void Sensor::ping_update()
